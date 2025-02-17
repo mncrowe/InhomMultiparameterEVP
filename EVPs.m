@@ -229,14 +229,18 @@ disp('K_1 = '); disp(K1s); disp('K_2 = '); disp(K2s)
 % which may be rewritten as:
 
 % ( [A₀ᵢ O O]      [A₁ᵢ A₁₁ᵢ A₁₂ᵢ]      [A₂ᵢ A₂₁ᵢ A₂₂ᵢ] ) [  a]
-% ( [ O  I O] + K₁ [-I   O    O  ] + K₂ [ O   O    O  ] ) [K₁a] = 0
-% ( [ O  O I]      [ O   O    O  ]      [-I   O    O  ] ) [K₂a]
+% ( [ O  I O] + K₁ [-I   O    I  ] + K₂ [ O   -I   O  ] ) [K₁a] = 0
+% ( [ O  O I]      [ O   O    I  ]      [-I   -I   O  ] ) [K₂a]
 
 % which is a system of 2 3N x 3N eigenvalue problems for two parameters. We
 % can solve this by using the usual Kronecker approach. The resulting 
 % system is of size (3N)^2 x (2N)^2. This is just about doable. For higher 
 % numbers of parameters, things become difficult as matrices start getting
-% really big.
+% really big. Compared with the usual Canonical form, we've added the I to
+% (2, 3) and (3, 3) in the second matrix and the -I to (2, 2) and (2, 3) in
+% the third matrix. This corresponds to K₁K₂a - K₂K₁a = 0 and removes zero
+% rows ensuring that the matrix is non-singular (if the first rows are well
+% behaved) or at least better conditioned.
 
 % Three-Parameter Problem: Let's skip the conversion step from the 
 % inhomogeneous problem to the system of quadratic problems to the system
@@ -309,7 +313,16 @@ disp(['We have loads of eigenvalues ... ' ...
 disp('¯\_(ツ)_/¯')
 
 % How do we determine which (K₁, K₂, K₃) values go together? Look at
-% eigenvectors and match baed on common eigenvalues. Then check.
+% eigenvectors and match based on common eigenvalues. Or given the
+% eigenvector a₁ we can form a simple linear algebra problem:
+
+% (A₁a₁) - K₁(B₁₁a₁) - K₂(B₁₂a₁) - K₃(B₁₃a₁) = 0,
+
+% The bracketed terms are vectors so we can take the first 2 (linearly
+% independent) rows of this system and solve as a 2 x 2 eigenvalue problem
+% for K₂ and K₃. This doesn't always work well if there's small errors in
+% the eigenvalues or eigenvectors. We also need to find a₁ which requires
+% unwrapping the kronecker product.
 
 % n-Parameter Inhomogeneous Quadratic Problem:
 %(A - Σ KⱼBⱼ)a = c₀ + Σ Kⱼcⱼ, dᵢ'a = 0, where i, j ∈ {1, 2, ..., n}
@@ -345,7 +358,7 @@ disp('¯\_(ツ)_/¯')
 
 % If you care about nice linear algebra ... maybe, there's some recent work
 % on subspace methods but these don't appear to have (yet) yielded fast,
-% scalable numberical methods.
+% scalable numerical methods.
 
 % If you don't care about linear algebra ... yes, you just need a
 % reasonable initial guess and can use gradient based root finding.
